@@ -1,0 +1,16 @@
+{
+  "name": "discord-notify",
+  "version": "1.0.0",
+  "description": "Discord alerts for server-side failures, with a ZeptoMail sender that reports failed sends. One file, no dependencies.",
+  "type": "module",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "test": "node --test test/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}
