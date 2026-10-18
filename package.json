@@ -1,5 +1,5 @@
 {
-  "name": "@traumatized-ink/discord-notify",
+  "name": "@trstudios/discord-notify",
   "version": "1.0.0",
   "description": "Discord alerts for server-side failures, with a ZeptoMail sender that reports failed sends. One file, no dependencies.",
   "keywords": [

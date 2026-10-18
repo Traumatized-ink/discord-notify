@@ -7,7 +7,7 @@ No dependencies. Ships as an ES module with TypeScript types, and needs a global
 ## Install
 
 ```sh
-npm install @traumatized-ink/discord-notify
+npm install @trstudios/discord-notify
 ```
 
 **Server-side only.** It reads secrets from the environment, so never import it into browser or app bundles.
@@ -27,7 +27,7 @@ Each option can also be passed in code instead of through the environment.
 ### Send an alert
 
 ```ts
-import { notifyDiscord } from "@traumatized-ink/discord-notify";
+import { notifyDiscord } from "@trstudios/discord-notify";
 
 await notifyDiscord({
   title: "Nightly export failed",
@@ -41,7 +41,7 @@ await notifyDiscord({
 ### Send an email
 
 ```ts
-import { sendMail } from "@traumatized-ink/discord-notify";
+import { sendMail } from "@trstudios/discord-notify";
 
 const result = await sendMail(
   {
