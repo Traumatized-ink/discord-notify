@@ -101,6 +101,8 @@ export interface Address {
 export interface Mail {
   from: Address;
   to: Address[];
+  cc?: Address[];
+  bcc?: Address[];
   replyTo?: Address;
   subject: string;
   text?: string;
@@ -142,10 +144,14 @@ export function maskEmail(address: string): string {
 
 const formatAddress = (a: Address) => (a.name ? `${a.name} <${a.address}>` : a.address);
 
+const recipients = (list: Address[]) => list.map((a) => ({ email_address: { address: a.address, name: a.name } }));
+
 function zeptoBody(mail: Mail) {
   return {
     from: { address: mail.from.address, name: mail.from.name },
-    to: mail.to.map((a) => ({ email_address: { address: a.address, name: a.name } })),
+    to: recipients(mail.to),
+    cc: mail.cc?.length ? recipients(mail.cc) : undefined,
+    bcc: mail.bcc?.length ? recipients(mail.bcc) : undefined,
     reply_to: mail.replyTo ? [{ address: mail.replyTo.address, name: mail.replyTo.name }] : undefined,
     subject: mail.subject,
     textbody: mail.text,
@@ -173,10 +179,14 @@ export function failureAlert(mail: Mail, error: string, level: AlertContent, sou
   const fields: Record<string, string | undefined> = { Source: source, Error: error };
   if (level === "none") {
     fields.To = mail.to.map((a) => maskEmail(a.address)).join(", ");
+    if (mail.cc?.length) fields.Cc = mail.cc.map((a) => maskEmail(a.address)).join(", ");
+    if (mail.bcc?.length) fields.Bcc = mail.bcc.map((a) => maskEmail(a.address)).join(", ");
     return { title: "Email failed to send", fields };
   }
   fields.From = formatAddress(mail.from);
   fields.To = mail.to.map(formatAddress).join(", ");
+  if (mail.cc?.length) fields.Cc = mail.cc.map(formatAddress).join(", ");
+  if (mail.bcc?.length) fields.Bcc = mail.bcc.map(formatAddress).join(", ");
   fields["Reply-To"] = mail.replyTo && formatAddress(mail.replyTo);
   fields.Subject = mail.subject;
   if (level === "summary") return { title: "Email failed to send", fields };

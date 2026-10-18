@@ -47,6 +47,7 @@ const result = await sendMail(
   {
     from: { address: "noreply@example.com", name: "Example" },
     to: [{ address: "someone@example.com" }],
+    bcc: [{ address: "audit@example.com" }], // optional, as is cc
     replyTo: { address: "help@example.com" },
     subject: "Your report is ready",
     html: "<p>…</p>",

@@ -118,3 +118,24 @@ test("alert levels include progressively more", () => {
   const full = failureAlert(mail, "boom", "full");
   assert.equal(full.body, "Hello & welcome\nSecond line");
 });
+
+test("cc and bcc are sent, and masked in a default alert", async () => {
+  const f = fakeFetch(new Response(null, { status: 500 }), new Response(null, { status: 204 }));
+  await sendMail(
+    { ...mail, cc: [{ address: "copy@example.com" }], bcc: [{ address: "audit@example.net" }] },
+    { token: "abc", fetch: f.fn, notify: { webhookUrl: "https://discord.test/hook" } },
+  );
+  const body = f.json(0);
+  assert.equal(body.cc[0].email_address.address, "copy@example.com");
+  assert.equal(body.bcc[0].email_address.address, "audit@example.net");
+  const alert = JSON.stringify(f.json(1));
+  assert.ok(alert.includes("a***@example.net") && !alert.includes("audit@example.net"));
+});
+
+test("empty cc and bcc are left out of the request", async () => {
+  const f = fakeFetch(new Response("{}", { status: 201 }));
+  await sendMail({ ...mail, cc: [], bcc: [] }, { token: "abc", fetch: f.fn });
+  const body = f.json(0);
+  assert.equal(body.cc, undefined);
+  assert.equal(body.bcc, undefined);
+});
