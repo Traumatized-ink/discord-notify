@@ -95,7 +95,7 @@ npm run typecheck
 1. Bump `version` in `package.json` and commit.
 2. Push a matching tag, for example `git tag v1.0.1 && git push origin v1.0.1`.
 
-GitHub Actions then publishes to npm through Trusted Publishing, with provenance.
+GitHub Actions then stages the release on npm through Trusted Publishing, with provenance. A maintainer approves it on npmjs.com to publish it.
 
 ## License
 
