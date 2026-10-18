@@ -77,6 +77,36 @@ if (!result.ok) {
 
 Use `"none"` for messages that contain secrets, such as sign-in codes, password resets and invite links. Anyone who can read the alert channel can read whatever an alert includes.
 
+### Check delivery and alerts
+
+`sendTestMail` sends a short test email through the same path as real mail. With `fail: true`, it uses a deliberately invalid token instead, so the send fails and the failure alert fires. That checks the alert path without changing any configuration.
+
+`secretMatches` compares a request header with a configured secret in constant time. It returns `false` when either value is missing.
+
+Here's an example route, shown with Next.js, protected by an admin secret. It sends only to an address from configuration:
+
+```ts
+import { secretMatches, sendTestMail } from "@trstudios/discord-notify";
+
+export async function POST(request: Request) {
+  if (!secretMatches(request.headers.get("x-admin-token"), process.env.ADMIN_TOKEN)) {
+    return Response.json({ error: "Not allowed" }, { status: 403 });
+  }
+  const to = process.env.TEST_EMAIL_TO;
+  if (!to) return Response.json({ error: "TEST_EMAIL_TO is not set" }, { status: 500 });
+
+  const result = await sendTestMail({
+    from: { address: "noreply@example.com", name: "Example" },
+    to: [{ address: to }],
+    source: "example.com",
+    fail: new URL(request.url).searchParams.get("fail") === "1",
+  });
+  return Response.json(result, { status: result.ok ? 200 : 502 });
+}
+```
+
+Never take the recipient from the request. Otherwise anyone holding the admin secret could use the route to send mail to arbitrary addresses.
+
 ## Safety notes
 
 - **No pings:** alerts are posted with mentions disabled, so text in a message can't ping `@everyone` or a role.

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { discordPayload, failureAlert, maskEmail, notifyDiscord, sendMail, truncate, type Mail } from "../src/notify.ts";
+import { discordPayload, failureAlert, maskEmail, notifyDiscord, secretMatches, sendMail, sendTestMail, truncate, type Mail } from "../src/notify.ts";
 
 type Call = { url: string; init: RequestInit };
 
@@ -138,4 +138,32 @@ test("empty cc and bcc are left out of the request", async () => {
   const body = f.json(0);
   assert.equal(body.cc, undefined);
   assert.equal(body.bcc, undefined);
+});
+
+test("secretMatches compares exactly and rejects missing values", () => {
+  assert.equal(secretMatches("abc", "abc"), true);
+  assert.equal(secretMatches("abc", "abd"), false);
+  assert.equal(secretMatches("abc", "abcd"), false);
+  assert.equal(secretMatches("", ""), false);
+  assert.equal(secretMatches(null, "abc"), false);
+  assert.equal(secretMatches("abc", undefined), false);
+});
+
+test("sendTestMail sends a delivery test with the configured token", async () => {
+  const f = fakeFetch(new Response("{}", { status: 201 }));
+  const r = await sendTestMail({ from: mail.from, to: [{ address: "ops@example.com" }], token: "abc", source: "site", fetch: f.fn });
+  assert.deepEqual(r, { ok: true });
+  const body = f.json(0);
+  assert.match(body.subject, /^Delivery test \(site\): /);
+  assert.equal(body.to[0].email_address.address, "ops@example.com");
+  assert.equal((f.calls[0].init.headers as Record<string, string>).Authorization, "Zoho-enczapikey abc");
+});
+
+test("sendTestMail with fail uses a bad token and raises a summary alert", async () => {
+  const f = fakeFetch(new Response(JSON.stringify({ error: { code: "TM_3501", message: "Invalid API Token" } }), { status: 401 }), new Response(null, { status: 204 }));
+  const r = await sendTestMail({ from: mail.from, to: [{ address: "ops@example.com" }], token: "abc", fail: true, fetch: f.fn, notify: { webhookUrl: "https://discord.test/hook" } });
+  assert.equal(r.ok, false);
+  assert.equal((f.calls[0].init.headers as Record<string, string>).Authorization, "Zoho-enczapikey invalid-token-for-failure-test");
+  const alert = JSON.stringify(f.json(1));
+  assert.ok(alert.includes("Failure alert test") && alert.includes("ops@example.com"));
 });

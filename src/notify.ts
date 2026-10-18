@@ -2,7 +2,9 @@
 // Server-side only: it reads secrets from the environment. Never import it from
 // browser or app bundles.
 //
-// No dependencies; needs a global fetch (Node 18+, Bun, Deno).
+// No dependencies; needs a global fetch and node:crypto (Node 18+, Bun, Deno).
+
+import { createHash, timingSafeEqual } from "node:crypto";
 
 type FetchFn = typeof fetch;
 
@@ -251,4 +253,55 @@ export async function sendMail(mail: Mail, options: SendOptions = {}): Promise<S
     fetch: options.notify?.fetch ?? options.fetch,
   });
   return { ok: false, error };
+}
+
+// ---------------------------------------------------------------------------
+// Delivery checks
+// ---------------------------------------------------------------------------
+
+/**
+ * Compares a secret from a request header with the expected value in constant
+ * time. Returns false when either is missing, so an unset secret never matches.
+ */
+export function secretMatches(given: string | null | undefined, expected: string | undefined): boolean {
+  if (!given || !expected) return false;
+  const a = createHash("sha256").update(given).digest();
+  const b = createHash("sha256").update(expected).digest();
+  return timingSafeEqual(a, b);
+}
+
+export interface TestMailOptions extends SendOptions {
+  from: Address;
+  /** Where the test goes. Take it from configuration, never from the request. */
+  to: Address[];
+  /**
+   * Send with a deliberately invalid token, so the send fails and the failure
+   * alert fires. Checks the alert path without changing any configuration.
+   */
+  fail?: boolean;
+}
+
+/**
+ * Sends a short test email through the same path as real mail, to check
+ * delivery (or, with `fail`, the failure alert). Never throws.
+ */
+export async function sendTestMail(options: TestMailOptions): Promise<SendResult> {
+  const { from, to, fail, ...send } = options;
+  const when = new Date().toISOString();
+  const what = fail ? "Failure alert test" : "Delivery test";
+  return sendMail(
+    {
+      from,
+      to,
+      subject: `${what}${send.source ? ` (${send.source})` : ""}: ${when}`,
+      text: fail
+        ? `This send used a deliberately invalid token, so it should fail and raise an alert.\n\nSent ${when}.`
+        : `If you can read this, email from ${from.address} is being delivered.\n\nSent ${when}.`,
+    },
+    {
+      alertContent: "summary",
+      ...send,
+      ...(fail && { token: "invalid-token-for-failure-test" }),
+    },
+  );
 }
