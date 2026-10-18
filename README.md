@@ -101,7 +101,7 @@ export async function POST(request: Request) {
     source: "example.com",
     fail: new URL(request.url).searchParams.get("fail") === "1",
   });
-  return Response.json(result, { status: result.ok ? 200 : 502 });
+  return Response.json(result, { status: result.ok ? 200 : 500 });
 }
 ```
 
