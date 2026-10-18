@@ -1,7 +1,4 @@
-// discord-notify v1.0.0 — https://github.com/Traumatized-ink/discord-notify
-// Copy this file into your project unchanged. To update it, replace it with a
-// newer release and keep the version line above.
-//
+// discord-notify — https://github.com/Traumatized-ink/discord-notify
 // Server-side only: it reads secrets from the environment. Never import it from
 // browser or app bundles.
 //

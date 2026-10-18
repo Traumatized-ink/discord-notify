@@ -1,13 +1,42 @@
 {
-  "name": "discord-notify",
+  "name": "@traumatized-ink/discord-notify",
   "version": "1.0.0",
   "description": "Discord alerts for server-side failures, with a ZeptoMail sender that reports failed sends. One file, no dependencies.",
-  "type": "module",
+  "keywords": [
+    "discord",
+    "webhook",
+    "alerts",
+    "zeptomail",
+    "email"
+  ],
   "license": "MIT",
-  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Traumatized-ink/discord-notify.git"
+  },
+  "type": "module",
+  "main": "./dist/notify.js",
+  "types": "./dist/notify.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/notify.d.ts",
+      "default": "./dist/notify.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
     "test": "node --test test/*.test.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run typecheck && npm test && npm run build"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

@@ -2,13 +2,13 @@
 
 Discord alerts for server-side failures, plus a [ZeptoMail](https://www.zoho.com/zeptomail/) sender that posts an alert whenever an email fails to send.
 
-One TypeScript file and no dependencies. It needs a global `fetch` (Node 18+, Bun or Deno).
+No dependencies. Ships as an ES module with TypeScript types, and needs a global `fetch` (Node 18+, Bun or Deno).
 
 ## Install
 
-Copy [`src/notify.ts`](src/notify.ts) into your project, for example as `src/lib/notify.ts`. The first line holds the version. To update, replace the file with a newer release.
-
-It's meant to be copied rather than installed as a package, so builds never depend on fetching it.
+```sh
+npm install @traumatized-ink/discord-notify
+```
 
 **Server-side only.** It reads secrets from the environment, so never import it into browser or app bundles.
 
@@ -27,7 +27,7 @@ Each option can also be passed in code instead of through the environment.
 ### Send an alert
 
 ```ts
-import { notifyDiscord } from "./lib/notify";
+import { notifyDiscord } from "@traumatized-ink/discord-notify";
 
 await notifyDiscord({
   title: "Nightly export failed",
@@ -41,7 +41,7 @@ await notifyDiscord({
 ### Send an email
 
 ```ts
-import { sendMail } from "./lib/notify";
+import { sendMail } from "@traumatized-ink/discord-notify";
 
 const result = await sendMail(
   {
@@ -89,6 +89,13 @@ npm install
 npm test
 npm run typecheck
 ```
+
+## Releasing
+
+1. Bump `version` in `package.json` and commit.
+2. Push a matching tag, for example `git tag v1.0.1 && git push origin v1.0.1`.
+
+GitHub Actions then publishes to npm through Trusted Publishing, with provenance.
 
 ## License
 
