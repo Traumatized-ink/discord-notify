@@ -100,6 +100,15 @@ export interface Address {
   name?: string;
 }
 
+export interface Attachment {
+  /** File name shown to the recipient, e.g. "report.pdf". */
+  filename: string;
+  /** The file's bytes. Strings are taken as already base64-encoded. */
+  content: Uint8Array | string;
+  /** MIME type, e.g. "application/pdf". */
+  contentType: string;
+}
+
 export interface Mail {
   from: Address;
   to: Address[];
@@ -109,6 +118,7 @@ export interface Mail {
   subject: string;
   text?: string;
   html?: string;
+  attachments?: Attachment[];
 }
 
 /**
@@ -146,6 +156,9 @@ export function maskEmail(address: string): string {
 
 const formatAddress = (a: Address) => (a.name ? `${a.name} <${a.address}>` : a.address);
 
+const base64 = (content: Uint8Array | string) =>
+  typeof content === "string" ? content : Buffer.from(content).toString("base64");
+
 const recipients = (list: Address[]) => list.map((a) => ({ email_address: { address: a.address, name: a.name } }));
 
 function zeptoBody(mail: Mail) {
@@ -158,6 +171,9 @@ function zeptoBody(mail: Mail) {
     subject: mail.subject,
     textbody: mail.text,
     htmlbody: mail.html,
+    attachments: mail.attachments?.length
+      ? mail.attachments.map((a) => ({ name: a.filename, mime_type: a.contentType, content: base64(a.content) }))
+      : undefined,
   };
 }
 
@@ -191,6 +207,9 @@ export function failureAlert(mail: Mail, error: string, level: AlertContent, sou
   if (mail.bcc?.length) fields.Bcc = mail.bcc.map(formatAddress).join(", ");
   fields["Reply-To"] = mail.replyTo && formatAddress(mail.replyTo);
   fields.Subject = mail.subject;
+  if (mail.attachments?.length) {
+    fields.Attachments = mail.attachments.map((a) => `${a.filename} (${a.contentType})`).join(", ");
+  }
   if (level === "summary") return { title: "Email failed to send", fields };
   const body = mail.text ?? (mail.html ? htmlToText(mail.html) : undefined);
   return { title: "Email failed to send", fields, body };

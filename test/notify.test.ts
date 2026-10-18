@@ -167,3 +167,24 @@ test("sendTestMail with fail uses a bad token and raises a summary alert", async
   const alert = JSON.stringify(f.json(1));
   assert.ok(alert.includes("Failure alert test") && alert.includes("ops@example.com"));
 });
+
+test("attachments are base64-encoded and named in summary alerts only", async () => {
+  const f = fakeFetch(new Response(null, { status: 500 }), new Response(null, { status: 204 }));
+  const pdf = new TextEncoder().encode("%PDF-1.4 test");
+  await sendMail(
+    { ...mail, attachments: [{ filename: "report.pdf", content: pdf, contentType: "application/pdf" }, { filename: "a.txt", content: "aGk=", contentType: "text/plain" }] },
+    { token: "abc", fetch: f.fn, alertContent: "summary", notify: { webhookUrl: "https://discord.test/hook" } },
+  );
+  const body = f.json(0);
+  assert.deepEqual(body.attachments[0], { name: "report.pdf", mime_type: "application/pdf", content: Buffer.from(pdf).toString("base64") });
+  assert.equal(body.attachments[1].content, "aGk=");
+  assert.ok(JSON.stringify(f.json(1)).includes("report.pdf (application/pdf)"));
+  const none = JSON.stringify(failureAlert({ ...mail, attachments: [{ filename: "secret.pdf", content: "x", contentType: "application/pdf" }] }, "boom", "none"));
+  assert.ok(!none.includes("secret.pdf"));
+});
+
+test("no attachments field when there are none", async () => {
+  const f = fakeFetch(new Response("{}", { status: 201 }));
+  await sendMail(mail, { token: "abc", fetch: f.fn });
+  assert.equal(f.json(0).attachments, undefined);
+});
