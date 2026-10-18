@@ -1,8 +1,7 @@
 name: Publish
 
-# Stages a release on npm when a version tag (v1.2.3) is pushed, using npm
-# Trusted Publishing: no npm token is stored anywhere. A maintainer then
-# approves the staged version on npmjs.com (with 2FA) to publish it.
+# Publishes to npm when a version tag (v1.2.3) is pushed, using npm Trusted
+# Publishing: no npm token is stored anywhere.
 on:
   push:
     tags: ["v*"]
@@ -26,6 +25,4 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
-      # `npm stage` needs npm 12+.
-      - run: npm install -g npm@12
-      - run: npm stage publish .
+      - run: npm publish

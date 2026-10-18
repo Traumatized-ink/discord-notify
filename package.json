@@ -1,6 +1,6 @@
 {
   "name": "@trstudios/discord-notify",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Discord alerts for server-side failures, with a ZeptoMail sender that reports failed sends. No dependencies.",
   "keywords": [
     "discord",
